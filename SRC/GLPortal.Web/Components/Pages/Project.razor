@@ -1,0 +1,24 @@
+﻿@page "/project/{projectId:int}"
+@inject IProjectService ProjectService
+
+<MudContainer>
+    <MudText Typo="Typo.h4">@ProjectInfo?.Name</MudText>
+    <MudText Typo="Typo.subtitle1">🔗 <a href="@ProjectInfo?.WebUrl" target="_blank">GitLab Link</a></MudText>
+
+    <MudPaper Elevation="2" Class="pa-4">
+        <MudText Typo="Typo.h6">📌 Issue</MudText>
+        <MudText>Totali Aperte: @ProjectInfo?.OpenIssues</MudText>
+        <MudText>Ultimo mese: Aperte: @ProjectInfo?.OpenLastMonth</MudText>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [Parameter] public int ProjectId { get; set; }
+    private ProjectSummaryDTO? ProjectInfo;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var projects = await ProjectService.GetProjectsAsync();
+        ProjectInfo = projects.FirstOrDefault(p => p.Id == ProjectId);
+    }
+}

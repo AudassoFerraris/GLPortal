@@ -27,3 +27,9 @@ GLPortal addresses some limitations of the free version of GitLab by providing s
 
 The project is intended to be **open source** and hosted on **GitHub**.
 
+## References
+
+- [GitLab REST API Docs](https://docs.gitlab.com/api/api_resources/)
+- [MudBlazor](https://mudblazor.com/)]
+- [FluentAssertions](https://xceed.com/products/unit-testing/fluent-assertions/)
+

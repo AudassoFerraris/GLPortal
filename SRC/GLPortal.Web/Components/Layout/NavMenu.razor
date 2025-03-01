@@ -1,0 +1,26 @@
+﻿
+<MudNavMenu>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+    <MudNavGroup Title="Progetti" Icon="@Icons.Material.Filled.Folder">
+        @foreach (var project in Projects)
+        {
+            <MudNavLink Href="@GetProjectUrl(project)" Icon="@Icons.Material.Filled.FolderOpen">@project.Name</MudNavLink>
+        }
+    </MudNavGroup>
+</MudNavMenu>
+
+@code {
+    private List<ProjectSummaryDTO> Projects = new();
+
+    [Inject] private IProjectService ProjectService { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Projects = await ProjectService.GetProjectsAsync();
+    }
+
+    private string GetProjectUrl(ProjectSummaryDTO project)
+    {
+        return $"/project/{project.Id}";
+    }
+}

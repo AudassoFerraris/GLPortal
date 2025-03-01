@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>3932077d-c29d-469e-be4b-19211029fce7</UserSecretsId>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <PackageReference Include="MudBlazor" Version="7.*" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <ProjectReference Include="..\GLPortal.Application\GLPortal.Application.csproj" />
+    <ProjectReference Include="..\GLPortal.Core\GLPortal.Core.csproj" />
+    <ProjectReference Include="..\GLPortal.Infrastructure\GLPortal.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

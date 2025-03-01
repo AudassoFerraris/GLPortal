@@ -1,0 +1,45 @@
+﻿@page "/"
+@using GLPortal.Application.DTOs
+@inject IProjectService ProjectService
+
+<PageTitle>Home</PageTitle>
+
+<MudContainer>
+    <MudGrid>
+        @foreach (var project in Projects) {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard>
+                    <MudCardContent>
+                        <MudText Typo="Typo.h6">
+                            <MudLink Href="@($"/project/{project.Id}")">
+                            @project.Name
+                            </MudLink>
+                        </MudText>
+                        <MudText>📌 Issue aperte: @project.OpenIssues</MudText>
+                        <MudText>📅 Ultimo mese: Aperte: @project.OpenLastMonth</MudText>
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton>
+
+                        </MudButton>
+                        <MudText Typo="Typo.subtitle1">🔗 <a href="@project?.WebUrl" target="_blank">GitLab Link</a></MudText>
+
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>
+
+
+
+<br />
+
+@code {
+    private List<ProjectSummaryDTO> Projects = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Projects = await ProjectService.GetProjectsAsync();
+    }
+}
