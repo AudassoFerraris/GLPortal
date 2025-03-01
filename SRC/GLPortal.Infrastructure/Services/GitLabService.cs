@@ -10,7 +10,7 @@ public class GitLabService(HttpClient httpClient, IMemoryCache memoryCache) : IG
 {
     private readonly TimeSpan cacheExpiration = TimeSpan.FromMinutes(5);
 
-    public async Task<List<Issue>> GetIssuesAsync(int projectId, IssueQueryParameters parameters)
+    public async Task<IssuesList> GetIssuesAsync(int projectId, IssueQueryParameters parameters)
     {
         string url = $"projects/{projectId}/issues";
         string queryString = parameters.ToString();
@@ -19,9 +19,18 @@ public class GitLabService(HttpClient httpClient, IMemoryCache memoryCache) : IG
             url += "?" + queryString;
         }
 
-        var response = await httpClient.GetStringAsync(url);
-        return JsonSerializer.Deserialize<List<Issue>>(response, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+        var response = await httpClient.GetAsync(url);
+        
+        var content = await response.Content.ReadAsStringAsync();
+        var result = JsonSerializer.Deserialize<IssuesList>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
             ?? throw new Exception("Can't deserialize response to a list of Issue objects");
+
+        if (response.Headers.TryGetValues("X-Total", out var values) && int.TryParse(values.FirstOrDefault(), out var count))
+        {
+            result.TotalCount  = count;
+        }
+
+        return result;
     }
 
     public async Task<Issue> GetIssueByIdAsync(int projectId, int issueId)

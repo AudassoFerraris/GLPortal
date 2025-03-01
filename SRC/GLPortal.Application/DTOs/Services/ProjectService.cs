@@ -67,4 +67,18 @@ public class ProjectService : IProjectService
 
         return summaries;
     }
+
+    public async Task<IssuesDTOList> GetIssues(int projectId, IssueQueryParameters parameters)
+    {
+        var result = new IssuesDTOList();
+
+        var issues = await _gitLabService.GetIssuesAsync(projectId, parameters);
+
+        result.AddRange(issues.Select(i => new IssueDTO(i)));
+
+        result.TotalCount = issues.TotalCount;
+
+        return result;
+
+    }
 }

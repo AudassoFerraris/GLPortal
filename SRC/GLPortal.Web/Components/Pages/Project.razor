@@ -1,4 +1,5 @@
 ﻿@page "/project/{projectId:int}"
+@using GLPortal.Core.Models
 @inject IProjectService ProjectService
 
 <MudContainer>
@@ -12,13 +13,60 @@
     </MudPaper>
 </MudContainer>
 
+<MudTable ServerData="ServerReload" Dense="true" Hover="true" @ref="MainTable">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">Issues</MudText>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortLabel="created_at" T="IssueDTO">Id</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="created_at" T="IssueDTO">Created At</MudTableSortLabel></MudTh>
+        <MudTh>Title</MudTh>
+        <MudTh>Assignee</MudTh>
+        @* <MudTh><MudTableSortLabel SortLabel="label_priority" T="Issue">Priority</MudTableSortLabel></MudTh> *@
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Iid</MudTd>
+        <MudTd DataLabel="Created At">@context.CreatedAt</MudTd>
+        <MudTd DataLabel="Title">@context.Title</MudTd>
+        <MudTd DataLabel="Assignee">@(context.Assignees?.Any() == true ? string.Join(", ", context.Assignees) : null)</MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No matching records found</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>Loading...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
 @code {
     [Parameter] public int ProjectId { get; set; }
     private ProjectSummaryDTO? ProjectInfo;
+    private MudTable<IssueDTO> MainTable = default!;
 
     protected override async Task OnParametersSetAsync()
     {
         var projects = await ProjectService.GetProjectsAsync();
         ProjectInfo = projects.FirstOrDefault(p => p.Id == ProjectId);
+    }
+
+    private async Task<TableData<IssueDTO>> ServerReload(TableState state, CancellationToken token)
+    {
+        var qryParams = new IssueQueryParameters
+            {
+                OrderBy = state.SortLabel,
+                Sort = state.SortDirection == SortDirection.Ascending ? "asc" : "desc",
+                PerPage = state.PageSize,
+                Page = state.Page+1
+            };
+        var issues = await ProjectService.GetIssues(ProjectId, qryParams);
+
+        return new TableData<IssueDTO>
+            {
+                TotalItems = issues.TotalCount,
+                Items = issues
+            };
     }
 }
