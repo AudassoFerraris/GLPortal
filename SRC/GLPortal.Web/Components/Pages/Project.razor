@@ -1,7 +1,10 @@
 ﻿@page "/project/{projectId:int}"
+@using GLPortal.Core.Enums
 @using GLPortal.Core.Models
+@using Microsoft.AspNetCore.WebUtilities
 @inject IProjectService ProjectService
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
 
 <MudContainer>
     <MudText Typo="Typo.h4">@ProjectInfo?.Name</MudText>
@@ -18,7 +21,13 @@
     <ToolBarContent>
         <MudText Typo="Typo.h6">Issues</MudText>
         <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ExportToExcel">Export</MudButton>
+        <MudTextField @bind-Value="_parameters.Search" Placeholder="Search by text" />
+        <MudSelect @bind-Value="_parameters.State" Clearable="true" Placeholder="State">
+            <MudSelectItem Value="@((IssueState?)IssueState.Opened)">Opened</MudSelectItem>
+            <MudSelectItem Value="@((IssueState?)IssueState.Closed)">Closed</MudSelectItem>
+        </MudSelect>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters">Apply</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.ImportExport" Variant="Variant.Filled" Color="Color.Primary" OnClick="ExportToExcel">Export</MudButton>
     </ToolBarContent>
     <HeaderContent>
         <MudTh><MudTableSortLabel SortLabel="created_at" T="IssueDTO">Id</MudTableSortLabel></MudTh>
@@ -65,6 +74,20 @@
             OrderBy = "created_at",
             Sort = "desc",
         };
+
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("search", out var search))
+        {
+            _parameters.Search = search;
+        }
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("labels", out var labels))
+        {
+            _parameters.Labels = labels;
+        }
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("state", out var state) && Enum.TryParse<IssueState>(state, true, out var issueState))
+        {
+            _parameters.State = issueState;
+        }
     }
 
     private async Task<TableData<IssueDTO>> ServerReload(TableState state, CancellationToken token)
@@ -81,6 +104,12 @@
                 TotalItems = issues.TotalCount,
                 Items = issues
             };
+    }
+
+    private async Task ApplyFilters() {
+        var queryString = _parameters.ToString();
+        var url = $"/project/{ProjectId}?{queryString}";
+        Navigation.NavigateTo(url, forceLoad: true);
     }
 
     void ExportToExcel()
