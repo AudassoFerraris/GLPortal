@@ -20,15 +20,20 @@
     <HeaderContent>
         <MudTh><MudTableSortLabel SortLabel="created_at" T="IssueDTO">Id</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="created_at" T="IssueDTO">Created At</MudTableSortLabel></MudTh>
+        <MudTh>State</MudTh>
         <MudTh>Title</MudTh>
+        <MudTh>Customer</MudTh>
+        <MudTh><MudTableSortLabel SortLabel="label_priority" T="IssueDTO">Priority</MudTableSortLabel></MudTh>
         <MudTh>Assignee</MudTh>
-        @* <MudTh><MudTableSortLabel SortLabel="label_priority" T="Issue">Priority</MudTableSortLabel></MudTh> *@
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Iid</MudTd>
         <MudTd DataLabel="Created At">@context.CreatedAt</MudTd>
+        <MudTd DataLabel="State">@context.GitLabState</MudTd>
         <MudTd DataLabel="Title">@context.Title</MudTd>
-        <MudTd DataLabel="Assignee">@(context.Assignees?.Any() == true ? string.Join(", ", context.Assignees) : null)</MudTd>
+        <MudTd DataLabel="Customer">@context.CustomersAsString</MudTd>
+        <MudTd DataLabel="Priority">@context.Priority</MudTd>
+        <MudTd DataLabel="Assignee">@context.AssigneesAsString</MudTd>
     </RowTemplate>
     <NoRecordsContent>
         <MudText>No matching records found</MudText>

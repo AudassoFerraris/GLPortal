@@ -7,19 +7,21 @@ using GLPortal.Infrastructure.Interfaces;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
+using System.Text.RegularExpressions;
+
 namespace GLPortal.Application.Services;
 
 public class ProjectService : IProjectService
 {
     private readonly IGitLabService _gitLabService;
     private readonly IMemoryCache _cache;
-    private readonly List<int> _configuredProjectIds;
+    private readonly GitLabSettings _gitLabSettings;
 
     public ProjectService(IGitLabService gitLabService, IMemoryCache cache, IOptions<GitLabSettings> options)
     {
         _gitLabService = gitLabService;
         _cache = cache;
-        _configuredProjectIds = options.Value.ProjectIds ?? new List<int>();
+        _gitLabSettings = options.Value;
     }
 
     public async Task<List<ProjectSummaryDTO>> GetProjectsAsync()
@@ -35,7 +37,7 @@ public class ProjectService : IProjectService
     {
         var summaries = new List<ProjectSummaryDTO>();
 
-        foreach (var projectId in _configuredProjectIds)
+        foreach (var projectId in _gitLabSettings.ProjectIds)
         {
             var project = await _gitLabService.GetProjectByIdAsync(projectId);
             var openIssues = await _gitLabService.GetIssuesCountAsync(projectId, new IssueQueryParameters 
@@ -74,7 +76,10 @@ public class ProjectService : IProjectService
 
         var issues = await _gitLabService.GetIssuesAsync(projectId, parameters);
 
-        result.AddRange(issues.Select(i => new IssueDTO(i)));
+        var priorityRegex = new Regex(_gitLabSettings.PriorityLabelRegex);
+        var customerRegex = new Regex(_gitLabSettings.CustomerLabelRegex);
+
+        result.AddRange(issues.Select(i => new IssueDTO(i, customerRegex, priorityRegex)));
 
         result.TotalCount = issues.TotalCount;
 
