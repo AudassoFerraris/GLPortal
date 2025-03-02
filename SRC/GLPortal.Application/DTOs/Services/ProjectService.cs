@@ -1,4 +1,6 @@
-﻿using GLPortal.Application.DTOs;
+﻿using ClosedXML.Excel;
+
+using GLPortal.Application.DTOs;
 using GLPortal.Core.Enums;
 using GLPortal.Core.Models;
 using GLPortal.Core.Settings;
@@ -40,22 +42,16 @@ public class ProjectService : IProjectService
         foreach (var projectId in _gitLabSettings.ProjectIds)
         {
             var project = await _gitLabService.GetProjectByIdAsync(projectId);
-            var openIssues = await _gitLabService.GetIssuesCountAsync(projectId, new IssueQueryParameters 
-                { 
+            var openIssues = await _gitLabService.GetIssuesCountAsync(new IssueQueryParameters(projectId)
+            {
+                ProjectId = projectId,
                 State = IssueState.Opened 
                 }); 
-            var openLastMonth = await _gitLabService.GetIssuesCountAsync(projectId, new IssueQueryParameters
+            var openLastMonth = await _gitLabService.GetIssuesCountAsync(new IssueQueryParameters(projectId)
             {
+                ProjectId = projectId,
                 CreatedAfter = DateTime.Now.AddMonths(-1)
             });
-            //var issuesLastMonth = await _gitLabService.GetIssuesAsync(projectId, new IssueQueryParameters
-            //{
-            //    State = IssueState.Opened,
-            //    OrderBy = "created_at",
-            //    Sort = "desc"
-            //});
-
-            //var closedIssuesLastMonth = issuesLastMonth.Where(i => i.State == IssueState.Closed).ToList();
 
             summaries.Add(new ProjectSummaryDTO
             {
@@ -70,11 +66,11 @@ public class ProjectService : IProjectService
         return summaries;
     }
 
-    public async Task<IssuesDTOList> GetIssues(int projectId, IssueQueryParameters parameters)
+    public async Task<IssuesDTOList> GetIssues(IssueQueryParameters parameters)
     {
         var result = new IssuesDTOList();
 
-        var issues = await _gitLabService.GetIssuesAsync(projectId, parameters);
+        var issues = await _gitLabService.GetIssuesAsync(parameters);
 
         var priorityRegex = new Regex(_gitLabSettings.PriorityLabelRegex);
         var customerRegex = new Regex(_gitLabSettings.CustomerLabelRegex);
@@ -85,5 +81,67 @@ public class ProjectService : IProjectService
 
         return result;
 
+    }
+
+    public async Task<byte[]> ExportIssuesToExcelAsync(IssueQueryParameters queryParameters)
+    {
+        queryParameters.PerPage = -1;
+        var project = await _gitLabService.GetProjectByIdAsync(queryParameters.ProjectId);
+        var issues = await GetIssues(queryParameters);
+
+        using var workbook = new XLWorkbook();
+        var worksheet = workbook.Worksheets.Add("Issues");
+
+        // Add headers
+        worksheet.Cell(1, 1).Value = "Id";
+        worksheet.Cell(1, 2).Value = "Title";
+        worksheet.Cell(1, 3).Value = "Created At";
+        worksheet.Cell(1, 4).Value = "State";
+        worksheet.Cell(1, 5).Value = "Assignees";
+        worksheet.Cell(1, 6).Value = "Customers";
+        worksheet.Cell(1, 7).Value = "Priority";
+
+        // Add data
+        for (int i = 0; i < issues.Count; i++)
+        {
+            var issue = issues[i];
+            worksheet.Cell(i + 2, 1).Value = issue.Iid;
+            worksheet.Cell(i + 2, 2).Value = issue.Title;
+            worksheet.Cell(i + 2, 3).Value = issue.CreatedAt;
+            worksheet.Cell(i + 2, 4).Value = issue.GitLabState.ToString();
+            worksheet.Cell(i + 2, 5).Value = issue.AssigneesAsString;
+            worksheet.Cell(i + 2, 6).Value = issue.CustomersAsString;
+            worksheet.Cell(i + 2, 7).Value = issue.Priority;
+        }
+
+        var range = worksheet.RangeUsed()!;
+        range.CreateTable();
+
+        // Freeze pane to maintain headers and Id column fixed
+        worksheet.SheetView.FreezeRows(1);
+        worksheet.SheetView.FreezeColumns(1);
+        worksheet.Columns().AdjustToContents();
+
+        worksheet = workbook.Worksheets.Add("Parameters");
+        
+        
+        worksheet.Cell(1, 1).Value = "Project";
+        worksheet.Cell(1, 2).Value = project.Name;
+
+        var row = 2;
+        foreach (var paramValues in queryParameters.GetActiveParameters())
+        {
+            worksheet.Cell(row, 1).Value = paramValues.Key;
+            worksheet.Cell(row, 2).Value = paramValues.Value.ToString();
+            row++;
+        }
+
+        worksheet.Range(1, 1, row - 1, 1).Style.Font.Bold = true;
+        worksheet.Columns().AdjustToContents();
+        
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        return stream.ToArray();
     }
 }

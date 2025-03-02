@@ -1,6 +1,7 @@
 ﻿@page "/project/{projectId:int}"
 @using GLPortal.Core.Models
 @inject IProjectService ProjectService
+@inject IJSRuntime JS
 
 <MudContainer>
     <MudText Typo="Typo.h4">@ProjectInfo?.Name</MudText>
@@ -16,6 +17,8 @@
 <MudTable ServerData="ServerReload" Dense="true" Hover="true" @ref="MainTable">
     <ToolBarContent>
         <MudText Typo="Typo.h6">Issues</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ExportToExcel">Export</MudButton>
     </ToolBarContent>
     <HeaderContent>
         <MudTh><MudTableSortLabel SortLabel="created_at" T="IssueDTO">Id</MudTableSortLabel></MudTh>
@@ -51,27 +54,41 @@
     private ProjectSummaryDTO? ProjectInfo;
     private MudTable<IssueDTO> MainTable = default!;
 
+    private IssueQueryParameters _parameters;
+
     protected override async Task OnParametersSetAsync()
     {
         var projects = await ProjectService.GetProjectsAsync();
         ProjectInfo = projects.FirstOrDefault(p => p.Id == ProjectId);
+        _parameters = new IssueQueryParameters(ProjectId)
+        {
+            OrderBy = "created_at",
+            Sort = "desc",
+        };
     }
 
     private async Task<TableData<IssueDTO>> ServerReload(TableState state, CancellationToken token)
     {
-        var qryParams = new IssueQueryParameters
-            {
-                OrderBy = state.SortLabel,
-                Sort = state.SortDirection == SortDirection.Ascending ? "asc" : "desc",
-                PerPage = state.PageSize,
-                Page = state.Page+1
-            };
-        var issues = await ProjectService.GetIssues(ProjectId, qryParams);
+        _parameters.OrderBy = state.SortLabel;
+        _parameters.Sort = state.SortDirection == SortDirection.Ascending ? "asc" : "desc";
+        _parameters.PerPage = state.PageSize;
+        _parameters.Page = state.Page + 1;
+
+        var issues = await ProjectService.GetIssues(_parameters);
 
         return new TableData<IssueDTO>
             {
                 TotalItems = issues.TotalCount,
                 Items = issues
             };
+    }
+
+    void ExportToExcel()
+    {
+
+        var queryString = _parameters.ToString();
+
+        var url = $"/api/issues/toExcel?projectId={ProjectId}&{queryString}";
+        JS.InvokeVoidAsync("open", url, "_blank");
     }
 }

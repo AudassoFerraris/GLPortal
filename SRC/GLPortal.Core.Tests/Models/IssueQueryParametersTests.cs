@@ -10,7 +10,8 @@ public class IssueQueryParametersTests
     public void ToString_ReturnsCorrectString()
     {
         // Arrange
-        var parameters = new IssueQueryParameters
+        var projectId = 3;
+        var parameters = new IssueQueryParameters(projectId)
         {
             State = IssueState.Opened,
             Labels = "bug,high priority",
@@ -21,6 +22,6 @@ public class IssueQueryParametersTests
         var result = parameters.ToString();
 
         // Assert
-        result.Should().Be("state=opened&labels=bug%2Chigh%20priority&per_page=10");
+        result.Should().Be("projectId=3&state=opened&labels=bug%2Chigh%20priority&per_page=10");
     }
 }

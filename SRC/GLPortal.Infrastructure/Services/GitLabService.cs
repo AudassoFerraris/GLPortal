@@ -10,9 +10,32 @@ public class GitLabService(HttpClient httpClient, IMemoryCache memoryCache) : IG
 {
     private readonly TimeSpan cacheExpiration = TimeSpan.FromMinutes(5);
 
-    public async Task<IssuesList> GetIssuesAsync(int projectId, IssueQueryParameters parameters)
+    public async Task<IssuesList> GetIssuesAsync(IssueQueryParameters parameters)
     {
-        string url = $"projects/{projectId}/issues";
+        IssuesList result;
+        // if PerPage is -1 then all issues are retrieved with iterative calls and maximum PerPage value
+        if (parameters.PerPage == -1)
+        {
+            result = new IssuesList();
+            var iterativeParameters = parameters.Clone() as IssueQueryParameters;
+            iterativeParameters!.PerPage = 100;
+            iterativeParameters.Page = 1;
+            
+            while (true)
+            {
+                var partialResult = await GetIssuesAsync(iterativeParameters);
+                if (!partialResult.Any())
+                    break;
+                result.AddRange(partialResult);
+                result.TotalCount = partialResult.TotalCount;
+                iterativeParameters.Page++;
+            }
+
+            return result;
+        }
+
+
+        string url = $"projects/{parameters.ProjectId}/issues";
         string queryString = parameters.ToString();
         if (!string.IsNullOrEmpty(queryString))
         {
@@ -22,7 +45,7 @@ public class GitLabService(HttpClient httpClient, IMemoryCache memoryCache) : IG
         var response = await httpClient.GetAsync(url);
         
         var content = await response.Content.ReadAsStringAsync();
-        var result = JsonSerializer.Deserialize<IssuesList>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+        result = JsonSerializer.Deserialize<IssuesList>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
             ?? throw new Exception("Can't deserialize response to a list of Issue objects");
 
         if (response.Headers.TryGetValues("X-Total", out var values) && int.TryParse(values.FirstOrDefault(), out var count))
@@ -58,11 +81,11 @@ public class GitLabService(HttpClient httpClient, IMemoryCache memoryCache) : IG
         return result!;
     }
 
-    public async Task<int> GetIssuesCountAsync(int projectId, IssueQueryParameters parameters)
+    public async Task<int> GetIssuesCountAsync(IssueQueryParameters parameters)
     {
         parameters.PerPage = 1;
         parameters.Page = 1;
-        string url = $"projects/{projectId}/issues";
+        string url = $"projects/{parameters.ProjectId}/issues";
         string queryString = parameters.ToString();
         if (!string.IsNullOrEmpty(queryString))
         {

@@ -30,6 +30,6 @@ The project is intended to be **open source** and hosted on **GitHub**.
 ## References
 
 - [GitLab REST API Docs](https://docs.gitlab.com/api/api_resources/)
-- [MudBlazor](https://mudblazor.com/)]
+- [MudBlazor](https://mudblazor.com/)
 - [FluentAssertions](https://xceed.com/products/unit-testing/fluent-assertions/)
 

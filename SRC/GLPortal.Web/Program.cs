@@ -1,5 +1,7 @@
 using GLPortal.Application.Services;
+using GLPortal.Core.Models;
 using GLPortal.Infrastructure.DependencyInjection;
+using GLPortal.Web.Api;
 using GLPortal.Web.Components;
 
 using MudBlazor.Services;
@@ -35,5 +37,7 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapGroup("/api/issues").ConfigureIssuesApi();
 
 app.Run();

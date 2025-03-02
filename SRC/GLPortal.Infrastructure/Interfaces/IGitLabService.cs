@@ -10,7 +10,7 @@ public interface IGitLabService
     /// <param name="projectId"></param>
     /// <param name="parameters"></param>
     /// <returns></returns>
-    Task<IssuesList> GetIssuesAsync(int projectId, IssueQueryParameters parameters);
+    Task<IssuesList> GetIssuesAsync(IssueQueryParameters parameters);
 
     /// <summary>
     /// Returns the total count of issues based on passed parameters
@@ -18,7 +18,7 @@ public interface IGitLabService
     /// <param name="projectId"></param>
     /// <param name="parameters"></param>
     /// <returns></returns>
-    Task<int> GetIssuesCountAsync(int projectId, IssueQueryParameters parameters);
+    Task<int> GetIssuesCountAsync(IssueQueryParameters parameters);
 
     /// <summary>
     /// Retrieve single issue information
