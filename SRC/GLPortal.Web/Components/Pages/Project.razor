@@ -10,25 +10,39 @@
     <MudText Typo="Typo.h4">@ProjectInfo?.Name</MudText>
     <MudText Typo="Typo.subtitle1">🔗 <a href="@ProjectInfo?.WebUrl" target="_blank">GitLab Link</a></MudText>
 
-    <MudPaper Elevation="2" Class="pa-4">
+    <MudPaper Elevation="2" Class="pa-4 mb-4">
         <MudText Typo="Typo.h6">📌 Issue</MudText>
-        <MudText>Totali Aperte: @ProjectInfo?.OpenIssues</MudText>
-        <MudText>Ultimo mese: Aperte: @ProjectInfo?.OpenLastMonth</MudText>
+        <MudText>Open issues: @ProjectInfo?.OpenIssues</MudText>
+        <MudText>Opened in last month: @ProjectInfo?.OpenLastMonth</MudText>
     </MudPaper>
 </MudContainer>
 
-<MudTable ServerData="ServerReload" Dense="true" Hover="true" @ref="MainTable">
-    <ToolBarContent>
+<MudPaper Class="pa-3">
+    <MudToolBar>
         <MudText Typo="Typo.h6">Issues</MudText>
         <MudSpacer />
-        <MudTextField @bind-Value="_parameters.Search" Placeholder="Search by text" />
-        <MudSelect @bind-Value="_parameters.State" Clearable="true" Placeholder="State">
-            <MudSelectItem Value="@((IssueState?)IssueState.Opened)">Opened</MudSelectItem>
-            <MudSelectItem Value="@((IssueState?)IssueState.Closed)">Closed</MudSelectItem>
-        </MudSelect>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters">Apply</MudButton>
-        <MudButton StartIcon="@Icons.Material.Filled.ImportExport" Variant="Variant.Filled" Color="Color.Primary" OnClick="ExportToExcel">Export</MudButton>
-    </ToolBarContent>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ToggleFilters">
+            <MudIcon Icon="@Icons.Material.Filled.FilterList" /> Filters
+        </MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.ImportExport" Variant="Variant.Filled" Color="Color.Primary" OnClick="ExportToExcel">
+            Export
+        </MudButton>
+    </MudToolBar>
+    @if (ShowFilters)
+    {
+        <MudContainer>
+
+            <MudTextField @bind-Value="_parameters.Search" Placeholder="Search by text" Class="mb-2" />
+            <MudSelect @bind-Value="_parameters.State" Clearable="true" Placeholder="State" Class="mb-2">
+                <MudSelectItem Value="@((IssueState?)IssueState.Opened)">Opened</MudSelectItem>
+                <MudSelectItem Value="@((IssueState?)IssueState.Closed)">Closed</MudSelectItem>
+            </MudSelect>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters">Apply</MudButton>
+        </MudContainer>
+    }
+</MudPaper>
+
+<MudTable ServerData="ServerReload" Dense="true" Hover="true" @ref="MainTable" HorizontalScrollbar="true">
     <HeaderContent>
         <MudTh><MudTableSortLabel SortLabel="created_at" T="IssueDTO">Id</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="created_at" T="IssueDTO">Created At</MudTableSortLabel></MudTh>
@@ -63,7 +77,8 @@
     private ProjectSummaryDTO? ProjectInfo;
     private MudTable<IssueDTO> MainTable = default!;
 
-    private IssueQueryParameters _parameters;
+    private IssueQueryParameters _parameters = default!;
+    private bool ShowFilters = false;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -76,17 +91,21 @@
         };
 
         var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        ShowFilters = false;
         if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("search", out var search))
         {
             _parameters.Search = search;
+            ShowFilters = true;
         }
         if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("labels", out var labels))
         {
             _parameters.Labels = labels;
+            ShowFilters = true;
         }
         if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("state", out var state) && Enum.TryParse<IssueState>(state, true, out var issueState))
         {
             _parameters.State = issueState;
+            ShowFilters = true;
         }
     }
 
@@ -104,6 +123,12 @@
                 TotalItems = issues.TotalCount,
                 Items = issues
             };
+    }
+
+    private void ToggleFilters()
+    {
+        ShowFilters = !ShowFilters;
+        StateHasChanged();
     }
 
     private async Task ApplyFilters() {
