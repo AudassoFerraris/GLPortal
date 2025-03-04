@@ -7,6 +7,9 @@ using GLPortal.Web.Components;
 using MudBlazor.Services;
 var builder = WebApplication.CreateBuilder(args);
 
+// Add support to run as a Windows Service
+builder.Host.UseWindowsService();
+
 builder.AddGitLabServices();
 
 builder.Services.AddScoped<IProjectService, ProjectService>();
