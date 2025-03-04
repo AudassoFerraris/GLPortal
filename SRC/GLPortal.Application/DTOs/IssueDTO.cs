@@ -17,6 +17,8 @@ public class IssueDTO
         var priorities = ExtractLabels(source.Labels, priorityRegex);
         Priority = priorities.FirstOrDefault();
         PriorityWarning = priorities.Length > 1;
+        Milestone = source.Milestone?.Title;
+        Labels = ExtractOtherLabels(source.Labels, new[] { customersRegex, priorityRegex });
     }
 
     public int Iid { get; set; }
@@ -57,6 +59,39 @@ public class IssueDTO
         return result;
     }
 
+    /// <summary>
+    /// Extract labels that doesn't match the regex
+    /// </summary>
+    /// <param name="labels"></param>
+    /// <param name="regex"></param>
+    /// <returns></returns>
+    string? ExtractOtherLabels(IEnumerable<string>? labels, params Regex[] regex)
+    {
+        if (labels == null)
+            return null;
+
+        var notMatchingLabels = new List<string>();
+        foreach (var label in labels)
+        {
+            var isMatching = false;
+            foreach (var r in regex)
+            {
+                if (r.IsMatch(label))
+                {
+                    isMatching = true;
+                    break;
+                }
+            }
+            if (!isMatching)
+                notMatchingLabels.Add(label);
+        }
+        if (notMatchingLabels.Any())
+            return string.Join(", ", notMatchingLabels);
+        return null;
+
+
+    }
+
     string? ParseLabel(string label, Regex regex)
     {
         var match = regex.Match(label);
@@ -64,4 +99,11 @@ public class IssueDTO
             return match.Groups[1].Value;
         return null;
     }
+
+    public string? Milestone { get; set; }
+
+    /// <summary>
+    /// LAbels other than customers and priority
+    /// </summary>
+    public string? Labels { get; set; }
 }

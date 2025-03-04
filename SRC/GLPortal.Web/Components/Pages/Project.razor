@@ -51,6 +51,8 @@
         <MudTh>Customer</MudTh>
         <MudTh><MudTableSortLabel SortLabel="label_priority" T="IssueDTO">Priority</MudTableSortLabel></MudTh>
         <MudTh>Assignee</MudTh>
+        <MudTh>Milestone</MudTh>
+        <MudTh>Labels</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="Id">@context.Iid</MudTd>
@@ -60,6 +62,8 @@
         <MudTd DataLabel="Customer">@context.CustomersAsString</MudTd>
         <MudTd DataLabel="Priority">@context.Priority</MudTd>
         <MudTd DataLabel="Assignee">@context.AssigneesAsString</MudTd>
+        <MudTd DataLabel="Milestone">@context.Milestone</MudTd>
+        <MudTd DataLabel="Labels">@context.Labels</MudTd>
     </RowTemplate>
     <NoRecordsContent>
         <MudText>No matching records found</MudText>

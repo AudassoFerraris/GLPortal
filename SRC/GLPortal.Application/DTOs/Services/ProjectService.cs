@@ -100,6 +100,8 @@ public class ProjectService : IProjectService
         worksheet.Cell(1, 5).Value = "Assignees";
         worksheet.Cell(1, 6).Value = "Customers";
         worksheet.Cell(1, 7).Value = "Priority";
+        worksheet.Cell(1, 8).Value = "Milestone";
+        worksheet.Cell(1, 8).Value = "Labels";
 
         // Add data
         for (int i = 0; i < issues.Count; i++)
@@ -112,6 +114,8 @@ public class ProjectService : IProjectService
             worksheet.Cell(i + 2, 5).Value = issue.AssigneesAsString;
             worksheet.Cell(i + 2, 6).Value = issue.CustomersAsString;
             worksheet.Cell(i + 2, 7).Value = issue.Priority;
+            worksheet.Cell(i + 2, 8).Value = issue.Milestone;
+            worksheet.Cell(i + 2, 8).Value = issue.Labels;
         }
 
         var range = worksheet.RangeUsed()!;
