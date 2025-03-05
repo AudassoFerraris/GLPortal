@@ -398,3 +398,4 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/SRC/GLPortal.Web/.config/dotnet-tools.json

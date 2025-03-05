@@ -111,6 +111,10 @@
             _parameters.State = issueState;
             ShowFilters = true;
         }
+        if (MainTable is not null)
+        {
+            MainTable.ReloadServerData();
+        }
     }
 
     private async Task<TableData<IssueDTO>> ServerReload(TableState state, CancellationToken token)
