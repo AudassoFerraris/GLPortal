@@ -108,6 +108,7 @@ public class ProjectService : IProjectService
         {
             var issue = issues[i];
             worksheet.Cell(i + 2, 1).Value = issue.Iid;
+            worksheet.Cell(i + 2, 1).SetHyperlink(new XLHyperlink(issue.WebUrl));
             worksheet.Cell(i + 2, 2).Value = issue.Title;
             worksheet.Cell(i + 2, 3).Value = issue.CreatedAt;
             worksheet.Cell(i + 2, 4).Value = issue.GitLabState.ToString();
@@ -131,6 +132,7 @@ public class ProjectService : IProjectService
         
         worksheet.Cell(1, 1).Value = "Project";
         worksheet.Cell(1, 2).Value = project.Name;
+        worksheet.Cell(1, 2).SetHyperlink(new XLHyperlink(project.WebUrl));
 
         var row = 2;
         foreach (var paramValues in queryParameters.GetActiveParameters())

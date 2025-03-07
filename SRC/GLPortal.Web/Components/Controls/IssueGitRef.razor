@@ -1,0 +1,23 @@
+﻿@using GLPortal.Core.Models
+@using GLPortal.Infrastructure.Interfaces
+@using MudBlazor
+
+<MudText Typo="@Typo">
+    
+    <a href="@Issue.WebUrl" target="_blank">
+        <GitLabLogo></GitLabLogo>
+        @(Content ?? Issue.Iid)
+    </a>
+</MudText>
+
+@code {
+    /// <summary>
+    /// Applies theme typography styles to the element
+    /// </summary>
+    [Parameter] public required IssueDTO Issue { get; set; }
+    [Parameter] public Typo Typo { get; set; } = Typo.body1;
+    /// <summary>
+    /// Content to display in the link, if null the issue id is displayed
+    /// </summary>
+    [Parameter] public object? Content { get; set; } = null;
+}

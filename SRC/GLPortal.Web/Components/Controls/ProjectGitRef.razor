@@ -1,0 +1,14 @@
+﻿@using GLPortal.Core.Models
+@using MudBlazor
+
+<MudText Typo="@Typo">
+    <a href="@Project?.WebUrl" target="_blank">
+        <GitLabLogo></GitLabLogo>
+        @Project?.Name
+    </a>
+</MudText>
+
+@code {
+    [Parameter] public ProjectSummaryDTO? Project { get; set; }
+    [Parameter] public Typo Typo { get; set; } = Typo.body1;
+}

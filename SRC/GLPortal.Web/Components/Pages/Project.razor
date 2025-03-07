@@ -8,7 +8,7 @@
 
 <MudContainer>
     <MudText Typo="Typo.h4">@ProjectInfo?.Name</MudText>
-    <MudText Typo="Typo.subtitle1">🔗 <a href="@ProjectInfo?.WebUrl" target="_blank">GitLab Link</a></MudText>
+    <ProjectGitRef Typo="Typo.subtitle1" Project="@ProjectInfo" />
 
     <MudPaper Elevation="2" Class="pa-4 mb-4">
         <MudText Typo="Typo.h6">📌 Issue</MudText>
@@ -55,7 +55,9 @@
         <MudTh>Labels</MudTh>
     </HeaderContent>
     <RowTemplate>
-        <MudTd DataLabel="Id">@context.Iid</MudTd>
+        <MudTd DataLabel="Id">
+            <IssueGitRef Issue="@context" Typo="Typo.body1" />
+        </MudTd>
         <MudTd DataLabel="Created At">@context.CreatedAt</MudTd>
         <MudTd DataLabel="State">@context.GitLabState</MudTd>
         <MudTd DataLabel="Title">@context.Title</MudTd>

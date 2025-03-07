@@ -19,6 +19,7 @@ public class IssueDTO
         PriorityWarning = priorities.Length > 1;
         Milestone = source.Milestone?.Title;
         Labels = ExtractOtherLabels(source.Labels, new[] { customersRegex, priorityRegex });
+        WebUrl = source.WebUrl;
     }
 
     public int Iid { get; set; }
@@ -106,4 +107,6 @@ public class IssueDTO
     /// LAbels other than customers and priority
     /// </summary>
     public string? Labels { get; set; }
+
+    public string WebUrl { get; set; } = string.Empty;
 }
