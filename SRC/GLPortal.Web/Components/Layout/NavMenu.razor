@@ -1,7 +1,7 @@
 ﻿
 <MudNavMenu>
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-    <MudNavGroup Title="Progetti" Icon="@Icons.Material.Filled.Folder">
+    <MudNavGroup Title="Progetti" Icon="@Icons.Material.Filled.Folder" Expanded="true">
         @foreach (var project in Projects)
         {
             <MudNavLink Href="@GetProjectUrl(project)" Icon="@Icons.Material.Filled.FolderOpen">@project.Name</MudNavLink>
