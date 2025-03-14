@@ -1,6 +1,6 @@
 ﻿using GLPortal.Core.Models;
 
-namespace GLPortal.Infrastructure.Interfaces;
+namespace GLPortal.Infrastructure.Services;
 
 public interface IGitLabService
 {
@@ -27,7 +27,7 @@ public interface IGitLabService
     /// <param name="issueId"></param>
     /// <returns></returns>
     Task<Issue> GetIssueByIdAsync(int projectId, int issueId);
-    
+
 
     /// <summary>
     /// Retrieve data about a project
@@ -35,6 +35,8 @@ public interface IGitLabService
     /// <param name="projectId"></param>
     /// <returns></returns>
     Task<Project> GetProjectByIdAsync(int projectId);
+
+    Task<List<Label>> GetProjectLabelsAsync(int projectId);
 }
 
 

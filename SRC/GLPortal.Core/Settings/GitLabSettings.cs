@@ -1,4 +1,6 @@
-﻿namespace GLPortal.Core.Settings;
+﻿using System.Text.RegularExpressions;
+
+namespace GLPortal.Core.Settings;
 
 public class GitLabSettings
 {
@@ -7,6 +9,8 @@ public class GitLabSettings
     /// settings
     /// </summary>
     public const string DefaultSectionName = "GitLab";
+    private string priorityLabelRegex = null!;
+    private string customerLabelRegex = null!;
 
     /// <summary>
     /// Base url of the GitLab installation
@@ -22,13 +26,33 @@ public class GitLabSettings
     /// Indicates the regular expression used to identify customer labels in GitLab.
     /// It must contain a group named "customer" that will be used to extract the customer value.
     /// </summary>
-    public required string CustomerLabelRegex { get; set; }
+    public required string CustomerLabelRegex
+    {
+        get => customerLabelRegex;
+        set
+        {
+            customerLabelRegex = value;
+            CustomerLabelRegexInstance = new(value);
+        }
+    }
+
+    public Regex CustomerLabelRegexInstance { get; private set; } = null!;
 
     /// <summary>
     /// Indicates the regular expression used to identify priority labels in GitLab.
     /// It must contain a group named "priority" that will be used to extract the priority value.
     /// </summary>
-    public required string PriorityLabelRegex { get; set; }
+    public required string PriorityLabelRegex
+    {
+        get => priorityLabelRegex; 
+        set
+        {
+            priorityLabelRegex = value;
+            PriorityLabelRegexInstance = new(value);
+        }
+    }
+
+    public Regex PriorityLabelRegexInstance { get; private set; } = null!;
 
     /// <summary>
     /// Indicates if the alphabetical order of the priority labels is ascending or descending.

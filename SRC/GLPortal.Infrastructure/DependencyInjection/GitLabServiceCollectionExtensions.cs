@@ -1,7 +1,6 @@
 ﻿namespace GLPortal.Infrastructure.DependencyInjection;
 
 using GLPortal.Core.Settings;
-using GLPortal.Infrastructure.Interfaces;
 using GLPortal.Infrastructure.Services;
 
 using Microsoft.Extensions.Configuration;

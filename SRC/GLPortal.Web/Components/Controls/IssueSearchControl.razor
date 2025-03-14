@@ -1,0 +1,36 @@
+﻿@using GLPortal.Core.Enums
+@using GLPortal.Core.Models
+<MudContainer>
+
+    <MudTextField @bind-Value="Parameters.Search" Placeholder="Search by text" Class="mb-2" />
+    <MudSelect @bind-Value="Parameters.State" Clearable="true" Placeholder="State" Class="mb-2">
+        <MudSelectItem Value="@((IssueState?)IssueState.Opened)">Opened</MudSelectItem>
+        <MudSelectItem Value="@((IssueState?)IssueState.Closed)">Closed</MudSelectItem>
+    </MudSelect>
+
+    <MudSelect @bind-Value="Parameters.CustomerLabel" Clearable="true" Placeholder="Customer" Class="mb-2">
+        @foreach (var customerLabel in Project.CustomerLabels) 
+        {
+            <MudSelectItem Value="@customerLabel.Name">@customerLabel.SimpleName</MudSelectItem>
+        }
+    </MudSelect>
+    <MudSelect @bind-Value="Parameters.PriorityLabel" Clearable="true" Placeholder="Priority" Class="mb-2">
+        @foreach (var priorityLabel in Project.PriorityLabels)
+        {
+            <MudSelectItem Value="@priorityLabel.Name">@priorityLabel.SimpleName</MudSelectItem>
+        }
+    </MudSelect>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters">Apply</MudButton>
+</MudContainer>
+
+@code {
+    [Parameter] public required ProjectSummaryDTO Project { get; set; }
+    [Parameter] public required IssueQueryParameters Parameters { get; set; }
+    [Parameter] public EventCallback OnApplyFilter { get; set; }
+
+    private async Task ApplyFilters()
+    {
+
+        await OnApplyFilter.InvokeAsync();
+    }
+}

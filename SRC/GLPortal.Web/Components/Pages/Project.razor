@@ -30,15 +30,8 @@
     </MudToolBar>
     @if (ShowFilters)
     {
-        <MudContainer>
-
-            <MudTextField @bind-Value="_parameters.Search" Placeholder="Search by text" Class="mb-2" />
-            <MudSelect @bind-Value="_parameters.State" Clearable="true" Placeholder="State" Class="mb-2">
-                <MudSelectItem Value="@((IssueState?)IssueState.Opened)">Opened</MudSelectItem>
-                <MudSelectItem Value="@((IssueState?)IssueState.Closed)">Closed</MudSelectItem>
-            </MudSelect>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters">Apply</MudButton>
-        </MudContainer>
+        <IssueSearchControl Parameters="@_parameters" Project="ProjectInfo" OnApplyFilter="@ApplyFilters">
+        </IssueSearchControl>
     }
 </MudPaper>
 
@@ -113,9 +106,19 @@
             _parameters.State = issueState;
             ShowFilters = true;
         }
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("customer_label", out var customerLabel)) {
+            _parameters.CustomerLabel = customerLabel;
+            ShowFilters = true;
+        }
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("priority_label", out var priorityLabel))
+        {
+            _parameters.PriorityLabel = priorityLabel;
+            ShowFilters = true;
+        }
+
         if (MainTable is not null)
         {
-            MainTable.ReloadServerData();
+            await MainTable.ReloadServerData();
         }
     }
 
@@ -142,7 +145,7 @@
     }
 
     private async Task ApplyFilters() {
-        var queryString = _parameters.ToString();
+        var queryString = _parameters.ToString(false);
         var url = $"/project/{ProjectId}?{queryString}";
         Navigation.NavigateTo(url, forceLoad: true);
     }

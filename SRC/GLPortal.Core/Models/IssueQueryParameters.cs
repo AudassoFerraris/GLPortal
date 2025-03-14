@@ -17,6 +17,11 @@ namespace GLPortal.Core.Models
         public string? OrderBy { get; set; } = "created_at"; // Campo per ordinamento
         public DateTime? CreatedAfter { get; set; } // Data di creazione successiva
         public string? Sort { get; set; } = "desc"; // Direzione ordinamento (asc/desc)
+
+        public string? CustomerLabel { get; set; } // Nome del customer label
+
+        public string? PriorityLabel { get; set; } // Label della priorità
+
         /// <summary>
         /// Number of results per page.
         /// 100 is the max accepted value.
@@ -104,6 +109,12 @@ namespace GLPortal.Core.Models
                             queryParameters.Page = page;
                         }
                         break;
+                    case "customer_label":
+                        queryParameters.CustomerLabel = value;
+                        break;
+                    case "priority_label":
+                        queryParameters.PriorityLabel = value;
+                        break;
                     default:
                         return false;
                 }
@@ -125,6 +136,8 @@ namespace GLPortal.Core.Models
             clone.AuthorUsername = AuthorUsername;
             clone.OrderBy = OrderBy;
             clone.Page = Page;
+            clone.CustomerLabel = CustomerLabel;
+            clone.PriorityLabel = PriorityLabel;
             return clone;
         }
 
@@ -139,16 +152,22 @@ namespace GLPortal.Core.Models
             if (!string.IsNullOrEmpty(AssigneeUsername)) parameters.Add("Assignee", AssigneeUsername);
             if (!string.IsNullOrEmpty(AuthorUsername)) parameters.Add("Author", AuthorUsername);
             if (CreatedAfter.HasValue) parameters.Add("CreatedAfter", CreatedAfter.Value);
-            
+            if (!string.IsNullOrEmpty(CustomerLabel)) parameters.Add("CustomerLabel", CustomerLabel);
+            if (!string.IsNullOrEmpty(PriorityLabel)) parameters.Add("PriorityLabel", PriorityLabel);
+
             return parameters;
         }
 
-        public override string ToString()
+        public string ToString()
+        {
+            return ToString(true);
+        }
+
+        public string ToString(bool forAPI = false)
         {
             var parameters = new List<string>();
 
             if (State.HasValue) parameters.Add($"state={State.Value.ToString().ToLower()}");
-            if (!string.IsNullOrEmpty(Labels)) parameters.Add($"labels={Uri.EscapeDataString(Labels)}");
             if (!string.IsNullOrEmpty(Milestone)) parameters.Add($"milestone={Uri.EscapeDataString(Milestone)}");
             if (!string.IsNullOrEmpty(Search)) parameters.Add($"search={Uri.EscapeDataString(Search)}");
             if (!string.IsNullOrEmpty(AssigneeUsername)) parameters.Add($"assignee_username={Uri.EscapeDataString(AssigneeUsername)}");
@@ -158,6 +177,25 @@ namespace GLPortal.Core.Models
             if (CreatedAfter.HasValue) parameters.Add($"created_after={CreatedAfter.Value:O}");
             if (PerPage.HasValue) parameters.Add($"per_page={PerPage.Value}");
             if (Page.HasValue) parameters.Add($"page={Page.Value}");
+            if (forAPI)
+            {
+                var labels = new List<string>();
+                if (!string.IsNullOrEmpty(Labels))
+                    labels.Add(Labels);
+                if (!string.IsNullOrEmpty(CustomerLabel))
+                    labels.Add(CustomerLabel);
+                if (!string.IsNullOrEmpty(PriorityLabel))
+                    labels.Add(PriorityLabel);
+                if (labels.Count > 0) 
+                    parameters.Add($"labels={Uri.EscapeDataString(string.Join(",", labels))}");
+            } else {
+                if (!string.IsNullOrEmpty(Labels))
+                    parameters.Add($"labels={Uri.EscapeDataString(Labels)}");
+                if (!string.IsNullOrEmpty(CustomerLabel))
+                    parameters.Add($"customer_label={Uri.EscapeDataString(CustomerLabel)}");
+                if (!string.IsNullOrEmpty(PriorityLabel))
+                    parameters.Add($"priority_label={Uri.EscapeDataString(PriorityLabel)}");
+            }
 
             return string.Join("&", parameters);
         }

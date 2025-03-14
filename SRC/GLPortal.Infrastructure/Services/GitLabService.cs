@@ -1,5 +1,4 @@
 ﻿using GLPortal.Core.Models;
-using GLPortal.Infrastructure.Interfaces;
 
 using Microsoft.Extensions.Caching.Memory;
 
@@ -105,5 +104,24 @@ public class GitLabService(HttpClient httpClient, IMemoryCache memoryCache) : IG
         var response = await httpClient.GetStringAsync($"projects/{projectId}");
         return JsonSerializer.Deserialize<Project>(response, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
             ?? throw new Exception("Can't deserialize response to Project object");
+    }
+
+    public async Task<List<Label>> GetProjectLabelsAsync(int projectId)
+    {
+        var result = await memoryCache.GetOrCreateAsync($"gitlab_project_labels_{projectId}",
+            async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = cacheExpiration;
+                var labels = await GetProjectLabelsFromApiAsync(projectId)!;
+                return labels;
+            });
+        return result!;
+    }
+
+    private async Task<List<Label>> GetProjectLabelsFromApiAsync(int projectId)
+    {
+        var response = await httpClient.GetStringAsync($"projects/{projectId}/labels");
+        return JsonSerializer.Deserialize<List<Label>>(response, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+            ?? throw new Exception("Can't deserialize response to a list of Label objects");
     }
 }

@@ -4,11 +4,12 @@ using GLPortal.Application.DTOs;
 using GLPortal.Core.Enums;
 using GLPortal.Core.Models;
 using GLPortal.Core.Settings;
-using GLPortal.Infrastructure.Interfaces;
+using GLPortal.Infrastructure.Services;
 
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace GLPortal.Application.Services;
@@ -52,18 +53,56 @@ public class ProjectService : IProjectService
                 ProjectId = projectId,
                 CreatedAfter = DateTime.Now.AddMonths(-1)
             });
+            var labels = await _gitLabService.GetProjectLabelsAsync(projectId);
 
+            var labelsDto = labels.Select(l => new LabelDTO(l)).ToList();
+            var priorityLabels = new List<LabelDTO>();
+            var customerLabels = new List<LabelDTO>();
+            foreach (var label in labelsDto)
+            {
+                var priorityLabel = ProcessLabelDTO(label, _gitLabSettings.PriorityLabelRegexInstance);
+                if (priorityLabel != null)
+                {
+                    priorityLabels.Add(priorityLabel);
+                }
+                var customerLabel = ProcessLabelDTO(label, _gitLabSettings.CustomerLabelRegexInstance);
+                if (customerLabel != null)
+                {
+                    customerLabels.Add(customerLabel);
+                }
+            }
             summaries.Add(new ProjectSummaryDTO
             {
                 Id = project.Id,
                 Name = project.Name,
                 WebUrl = project.WebUrl,
                 OpenIssues = openIssues,
-                OpenLastMonth = openLastMonth
+                OpenLastMonth = openLastMonth,
+                Labels = labelsDto,
+                PriorityLabels = priorityLabels,
+                CustomerLabels = customerLabels
             });
         }
 
         return summaries;
+    }
+
+    /// <summary>
+    /// I label matching the regex is processed and returned
+    /// with SimpleName set to the value of the first group in the regex
+    /// </summary>
+    /// <param name="label"></param>
+    /// <param name="regex"></param>
+    /// <returns></returns>
+    public LabelDTO? ProcessLabelDTO(LabelDTO label, Regex regex)
+    {
+        var match = regex.Match(label.Name);
+        if (match.Success && match.Groups.Count == 2)
+        {
+            label.SimpleName = match.Groups[1].Value;
+            return label;
+        }
+        return null;
     }
 
     public async Task<IssuesDTOList> GetIssues(IssueQueryParameters parameters)
@@ -75,7 +114,9 @@ public class ProjectService : IProjectService
         var priorityRegex = new Regex(_gitLabSettings.PriorityLabelRegex);
         var customerRegex = new Regex(_gitLabSettings.CustomerLabelRegex);
 
-        result.AddRange(issues.Select(i => new IssueDTO(i, customerRegex, priorityRegex)));
+        result.AddRange(issues.Select(i => new IssueDTO(i, 
+            _gitLabSettings.CustomerLabelRegexInstance,
+            _gitLabSettings.PriorityLabelRegexInstance)));
 
         result.TotalCount = issues.TotalCount;
 
