@@ -11,6 +11,8 @@ public class IssueDTO
         Iid = source.Iid;
         Title = source.Title;
         CreatedAt = source.CreatedAt;
+        UpdatedAt = source.UpdatedAt;
+        ClosedAt = source.ClosedAt;
         GitLabState = source.State;
         Assignees = source.Assignees?.Select(u => u.Username).ToArray();
         Customers = ExtractLabels(source.Labels, customersRegex);
@@ -27,7 +29,11 @@ public class IssueDTO
     public string Title { get; set; }
 
     public DateTime CreatedAt { get; set; }
-    
+
+    public DateTime UpdatedAt { get; set; }
+
+    public DateTime? ClosedAt { get; set; }
+
     public IssueState GitLabState { get; set; }
 
     public string[]? Assignees { get; set; }

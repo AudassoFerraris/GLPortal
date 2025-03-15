@@ -1,12 +1,15 @@
 ﻿
 <MudNavMenu>
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
-    <MudNavGroup Title="Progetti" Icon="@Icons.Material.Filled.Folder" Expanded="true">
-        @foreach (var project in Projects)
-        {
-            <MudNavLink Href="@GetProjectUrl(project)" Icon="@Icons.Material.Filled.FolderOpen">@project.Name</MudNavLink>
-        }
-    </MudNavGroup>
+    @foreach (var project in Projects)
+    {
+        <MudNavGroup Title="@project.Name" Icon="@Icons.Material.Filled.Source" Expanded="true">
+            <MudNavLink Href="@GetProjectUrl(project)" Icon="@Icons.Material.Filled.Checklist">Issues</MudNavLink>
+            @foreach (var customer in project.CustomerLabels) {
+                <MudNavLink Href="@GetCustomerUrl(project, customer)" Icon="@Icons.Material.Filled.Business">@customer.SimpleName</MudNavLink>
+            }
+        </MudNavGroup>
+    }
 </MudNavMenu>
 
 @code {
@@ -22,5 +25,9 @@
     private string GetProjectUrl(ProjectSummaryDTO project)
     {
         return $"/project/{project.Id}";
+    }
+
+    private string GetCustomerUrl(ProjectSummaryDTO project, LabelDTO customerLabel) {
+        return $"/project/{project.Id}/customer/{customerLabel.Id}";
     }
 }

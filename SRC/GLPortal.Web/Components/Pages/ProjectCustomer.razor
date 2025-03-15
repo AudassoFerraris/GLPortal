@@ -1,0 +1,137 @@
+﻿@page "/project/{projectId:int}/customer/{customerLabelId:int}"
+@using GLPortal.Core.Enums
+@using GLPortal.Core.Models
+@using Microsoft.AspNetCore.WebUtilities
+@inject IProjectService ProjectService
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<MudCard Class="mb-6">
+    <MudCardContent>
+
+        <MudText Typo="Typo.h4">@ProjectInfo?.Name - @CustomerLabel.SimpleName</MudText>
+        <MudDivider Class="mb-4" />
+        <MudText>Open issues: @OpenedIssues?.ToString("N0")</MudText>
+        <MudText>Opened in last month: @OpenedInLastMonthIssues?.ToString("N0")</MudText>
+        <MudText>Closed in last month: @ClosedInLastMonthIssues?.ToString("N0")</MudText>
+        <MudText>Last activity: @LastActivityAt?.ToShortDateString()</MudText>
+        <MudText>Oldest already open: @OldestIssueCreatedAt?.ToShortDateString()</MudText>
+    </MudCardContent>
+</MudCard>
+
+<MudGrid Spacing="6">
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Issues state</MudText>
+                <MudChart ChartType="ChartType.Pie" Width="100%" Height="200px"
+                InputData="@IssuesByStatusData"
+                InputLabels="@IssuesByStatusLabels" ChartOptions="@IssuesBySTatusOptions">
+                </MudChart>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="4">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Open by priority</MudText>
+                <MudChart ChartType="ChartType.Pie" Width="100%" Height="200px"
+                InputData="@IssuesByPriorityData"
+                InputLabels="@IssuesByPriorityLabels">
+                </MudChart>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    @* <MudItem xs="12" sm="12" md="12">
+        <MudCard>
+            <MudCardContent>
+                <MudText Typo="Typo.h6">Last year</MudText>
+                <MudChart ChartType="ChartType.Bar" Width="100%" Height="350px"
+                        ChartSeries="@ByYearSeries"
+                        XAxisLabels="@ByYearLabels">
+                </MudChart>
+            </MudCardContent>
+        </MudCard>
+    </MudItem> *@
+</MudGrid>
+
+
+@code {
+    [Parameter] public int ProjectId { get; set; }
+    [Parameter] public int CustomerLabelId { get; set; }
+    private ProjectSummaryDTO? ProjectInfo;
+    private LabelDTO? CustomerLabel;
+    private DateTime? LastActivityAt;
+    private DateTime? OldestIssueCreatedAt;
+    private int? TotalIssues;
+    private int? OpenedIssues;
+    private int? ClosedIssues;
+    private int? OpenedInLastMonthIssues;
+    private int? ClosedInLastMonthIssues;
+    ChartOptions IssuesBySTatusOptions;
+
+    private double[]? IssuesByStatusData;
+    private string[]? IssuesByStatusLabels;
+
+    private double[] IssuesByPriorityData = [];
+    private string[] IssuesByPriorityLabels = [];
+
+    private List<ChartSeries> ByYearSeries = new List<ChartSeries>();
+    private string[] ByYearLabels = [];
+
+    public ProjectCustomer()
+    {
+        IssuesBySTatusOptions = new ChartOptions
+            {
+                ChartPalette = ["#FF0000", "#00FF00" ]
+            };
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var projects = await ProjectService.GetProjectsAsync();
+        ProjectInfo = projects.FirstOrDefault(p => p.Id == ProjectId);
+        CustomerLabel = ProjectInfo?.CustomerLabels.FirstOrDefault(c => c.Id == CustomerLabelId);
+
+        if (ProjectInfo == null || CustomerLabel == null)
+        {
+            Navigation.NavigateTo("/");
+        }
+
+        var issuesQueryParam = new IssueQueryParameters(ProjectId) {
+            PerPage = -1,
+            CustomerLabel = CustomerLabel!.Name
+        };
+        var issues = await ProjectService.GetIssues(issuesQueryParam);
+        LastActivityAt = issues.Max(i => i.UpdatedAt);
+        var lastMonthMinDate = DateTime.Today.AddMonths(-1);
+        TotalIssues = issues.Count();
+        OpenedIssues = issues.Count(_ => _.GitLabState == IssueState.Opened);
+        ClosedIssues = issues.Count(_ => _.GitLabState == IssueState.Closed);
+        OpenedInLastMonthIssues = issues.Count(_ => _.CreatedAt >= lastMonthMinDate);
+        ClosedInLastMonthIssues = issues.Count(_ => _.GitLabState == IssueState.Closed && _.ClosedAt.Value >= lastMonthMinDate);
+        OldestIssueCreatedAt = issues.Where(_ => _.GitLabState == IssueState.Opened).Min(_ => _.CreatedAt);
+
+        IssuesByStatusData = [(double)OpenedIssues, (double)ClosedIssues];
+        IssuesByStatusLabels = [$"Open ({OpenedIssues:N0})", $"Closed ({ClosedIssues:N0})"];
+
+        var priorities = ProjectInfo!.PriorityLabels.ToDictionary(_ => _.Id, _ => _);
+        var byPriorityCount = issues.Where(_ => _.GitLabState == IssueState.Opened)
+            .GroupBy(_ => _.Priority ?? "N/A")
+            .ToDictionary(_ => _.Key, _ => (double) _.Count());
+        var dataByPriority = ProjectInfo!.PriorityLabels.Select(label => {
+            double count = 0;
+            byPriorityCount.TryGetValue(label.SimpleName!, out count);
+            return new { Priority = label.SimpleName!, Count = count };
+        }).ToList();
+        if (byPriorityCount.TryGetValue("N/A", out var countNA)) {
+            dataByPriority.Add(new { Priority = "N/A", Count = countNA });
+        }
+        IssuesByPriorityData = dataByPriority.Select(_ => _.Count).ToArray();
+        IssuesByPriorityLabels = dataByPriority.Select(_ => $"{_.Priority} ({_.Count:N0})").ToArray();
+        StateHasChanged();
+
+        
+    }
+}
