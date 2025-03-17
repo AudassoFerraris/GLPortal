@@ -104,14 +104,18 @@
             CustomerLabel = CustomerLabel!.Name
         };
         var issues = await ProjectService.GetIssues(issuesQueryParam);
+        if (!issues.Any())
+            return;
         LastActivityAt = issues.Max(i => i.UpdatedAt);
         var lastMonthMinDate = DateTime.Today.AddMonths(-1);
+
         TotalIssues = issues.Count();
         OpenedIssues = issues.Count(_ => _.GitLabState == IssueState.Opened);
         ClosedIssues = issues.Count(_ => _.GitLabState == IssueState.Closed);
         OpenedInLastMonthIssues = issues.Count(_ => _.CreatedAt >= lastMonthMinDate);
         ClosedInLastMonthIssues = issues.Count(_ => _.GitLabState == IssueState.Closed && _.ClosedAt.Value >= lastMonthMinDate);
-        OldestIssueCreatedAt = issues.Where(_ => _.GitLabState == IssueState.Opened).Min(_ => _.CreatedAt);
+        var openIssues = issues.Where(_ => _.GitLabState == IssueState.Opened).ToList();
+        OldestIssueCreatedAt = openIssues.Any() ? openIssues.Min(_ => _.CreatedAt) : null;
 
         IssuesByStatusData = [(double)OpenedIssues, (double)ClosedIssues];
         IssuesByStatusLabels = [$"Open ({OpenedIssues:N0})", $"Closed ({ClosedIssues:N0})"];
