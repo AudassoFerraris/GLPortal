@@ -115,6 +115,11 @@
             _parameters.PriorityLabel = priorityLabel;
             ShowFilters = true;
         }
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("milestone", out var milestone))
+        {
+            _parameters.Milestone = milestone;
+            ShowFilters = true;
+        }
 
         if (MainTable is not null)
         {

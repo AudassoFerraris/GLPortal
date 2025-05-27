@@ -58,7 +58,7 @@ namespace GLPortal.Core.Models
 
             var queryParameters = new IssueQueryParameters(projectId);
 
-            foreach (var parameter in parameters)
+            foreach (var parameter in parameters.Where(_ => _.Key != "projectid"))
             {
                 var value = Uri.UnescapeDataString(parameter.Value);
 

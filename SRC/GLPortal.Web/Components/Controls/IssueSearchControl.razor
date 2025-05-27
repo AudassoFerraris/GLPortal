@@ -20,6 +20,7 @@
             <MudSelectItem Value="@priorityLabel.Name">@priorityLabel.SimpleName</MudSelectItem>
         }
     </MudSelect>
+    <MudTextField @bind-Value="Parameters.Milestone" Placeholder="Search by milestone" Class="mb-2" />
     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters">Apply</MudButton>
 </MudContainer>
 
